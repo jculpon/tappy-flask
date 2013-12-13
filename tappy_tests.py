@@ -12,7 +12,13 @@ import tappy
 import unittest
 
 class TappyTerrorTestCase(unittest.TestCase):
-    pass
+    def setUp(self):
+        tappy.app.config['TESTING'] = True
+        self.app = tappy.app.test_client()
+        
+    def test_index_renders(self):
+        result = self.app.get('/')
+        self.assertEqual(result.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tappy Terror: {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}" />
+  </head>
+  <body>
+    <header>
+      {% block header %}{% endblock %}
+    </header>
+    <article>
+      {% block body %}{% endblock %}
+    </article>
+    <footer>
+      <div class="about">
+        <p>Tappy Terror is a demonstration of the OpenAMD project created by Jamie Culpon, Megan Myers, and Sam Calabrese. This version of Tappy Terror was coded by Jamie based off the original version designed by all three and coded by Jamie and Sam</p>
+      </div>
+      <div class="copyright">
+        <p>Tappy Terror is licensed under the MIT license.</p>
+      </div>
+      <div class="github">
+        <p>Code available on <a href="https://github.com/jculpon/tappy-flask">GitHub</a>
+      </div>
+    </footer>
+  </body>
+</html>
