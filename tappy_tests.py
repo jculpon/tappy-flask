@@ -11,7 +11,7 @@
 import tappy
 import unittest
 
-class TappyTerrorTestCase(unittest.TestCase):
+class TappyTerrorWebTestCase(unittest.TestCase):
     def setUp(self):
         tappy.app.config['TESTING'] = True
         self.app = tappy.app.test_client()
