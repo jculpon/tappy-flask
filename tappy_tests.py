@@ -20,6 +20,16 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         result = self.app.get('/')
         self.assertEqual(result.status_code, 200)
 
+    def test_draw_board_image(self):
+        dummy_game_board = {}
+        for name in tappy.floor_list.keys():
+            dummy_game_board[name] = tappy.Location()
+        # TODO currently this writes to:
+        # tappy.app.static/boards/tappymap-yyyy-mm-dd-HH-MM-SS.png
+        # and really that should be mocked out or something to avoid the
+        # file write while testing
+        tappy.draw_board_image(dummy_game_board, tappy.floor_list)
+
 class LocationTestCase(unittest.TestCase):
     def test_mob_spawn(self):
         loc = tappy.Location('some team', 0)

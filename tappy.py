@@ -8,6 +8,10 @@
     :license: MIT; details in LICENSE
 """
 
+from PIL import Image, ImageDraw
+import time
+import os
+
 # Flask setup
 from flask import Flask, render_template
 
@@ -28,6 +32,43 @@ def game_index():
     return render_template('game.html')
 
 # End Flask setup
+
+def draw_board_image(game_board, rooms):
+    """Draws an image representing the current state of the game
+
+    game_board - dict(name -> loc)
+    rooms - equiv to floor_list
+    """
+    im = Image.new ('RGBA', (1157,1098), (0,0,0,0)) #Create a blank image
+    draw = ImageDraw.Draw(im) #create a draw object
+
+    for name, loc in game_board.items() :
+        if rooms[name].poly_type == 'rect':
+            draw.rectangle(rooms[name].vertices, fill=loc.team, outline="black")
+        elif rooms[name].poly_type == 'poly':
+            draw.polygon(rooms[name].vertices, fill=loc.team, outline="black")
+
+    img_dir = os.path.join(app.static_folder, 'boards')
+
+    # make sure the boards img dir exists - without this im.save() will raise
+    # if we haven't made the dir yet.
+    # Note that this construction avoids a subtle race condition in the
+    # naive "if the dir doesn't exist, make it" code. In python >=3.2, we
+    # can just use os.makedirs(path, exist_ok=True), which does essentially
+    # this.
+    try:
+        os.makedirs(img_dir)
+    except OSError:
+        if not os.path.isdir(img_dir):
+            raise
+
+    now_gmt = time.gmtime()    
+    filename = 'tappymap-%s.png' % (
+        time.strftime('%Y-%m-%d-%H-%M-%S', now_gmt)
+    )
+        
+    im.save(os.path.join(img_dir, filename))
+    # TODO make latest.png -> this filename
 
 # Game config
 # These constants are the variables that control all the
