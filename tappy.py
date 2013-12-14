@@ -11,6 +11,7 @@
 from PIL import Image, ImageDraw
 import time
 import os
+import errno
 
 # Flask setup
 from flask import Flask, render_template
@@ -68,7 +69,29 @@ def draw_board_image(game_board, rooms):
     )
         
     im.save(os.path.join(img_dir, filename))
-    # TODO make latest.png -> this filename
+    symlink_with_overwrite(os.path.join(img_dir, filename),
+                           os.path.join(app.static_folder, 'latest.png'))
+
+def symlink_with_overwrite(src, dst):
+    """Create a symlink at dst pointing to src, overwriting dst if possible
+
+    Like os.symlink(src, dst), but if the link fails to be created due to a
+    file already exisitng at dst, tries to delete the file and make the link.
+    Can still raise an OSError with e.errno == EEXIST if another process
+    creates dst after this function deletes it.
+    """
+    try:
+        os.symlink(src, dst)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+        # symlink already exists, kill it and relink. We could theoretically
+        # lose a race here between the delete and create. If so, we just have
+        # to bail.
+        os.remove(dst)
+        os.symlink(src, dst)
+
+    
 
 # Game config
 # These constants are the variables that control all the
