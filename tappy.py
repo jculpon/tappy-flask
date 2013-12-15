@@ -36,7 +36,6 @@ def game_index():
     gb = s['gameboard']
     ap = s['activeplayers']
     tp = s['teampoints']
-    ls = s['lastsave']
     s.close()
 
     return render_template('game.html')
@@ -126,8 +125,6 @@ class TappyTerrorGame(object):
     active_players = {} 
     # Team point totals
     team_points = {"red": 0, "blue": 0, "yellow": 0, "green": 0} 
-    # Most recently generated map image, relative to script's starting dir
-    last_saved_filename = ""
     def __init__(self):
         initialize_game_board()
 
@@ -198,7 +195,6 @@ def shelve_data():
     s['gameboard'] = TappyTerrorGame.game_board
     s['activeplayers'] = TappyTerrorGame.active_players
     s['teampoints'] = TappyTerrorGame.team_points
-    s['lastsave'] = TappyTerrorGame.last_saved_filename
     s.close()
 
 def get_location_dump(filter=None, value=None):
