@@ -23,7 +23,10 @@ class TappyTerrorWebTestCase(unittest.TestCase):
     def test_draw_board_image(self):
         dummy_game_board = {}
         for name in tappy.floor_list.keys():
-            dummy_game_board[name] = tappy.Location()
+            dummy_game_board[name] = tappy.Location(
+                name,
+                tappy.floor_list[name]
+            )
         # TODO currently this writes to:
         # tappy.app.static/boards/tappymap-yyyy-mm-dd-HH-MM-SS.png
         # and really that should be mocked out or something to avoid the
@@ -36,7 +39,12 @@ class TappyTerrorWebTestCase(unittest.TestCase):
 
 class LocationTestCase(unittest.TestCase):
     def test_mob_spawn(self):
-        loc = tappy.Location('some team', 0)
+        loc = tappy.Location(
+            'name',
+            tappy.Polygon('rect', [(0,0), (1,1)]),
+            'some team',
+            0
+        )
         loc.spawn_mob()
         self.assertTrue(loc.has_mobs())
         self.assertGreater(loc.mob_count, 0)
@@ -47,7 +55,12 @@ class LocationTestCase(unittest.TestCase):
         self.assertEqual(loc.mob_count, tappy.max_mobs_in_loc)
 
     def test_remove_mob(self):
-        loc = tappy.Location('some team', tappy.max_mobs_in_loc)
+        loc = tappy.Location(
+            'name',
+            tappy.Polygon('rect', [(0,0), (1,1)]),
+            'some team',
+            tappy.max_mobs_in_loc
+        )
         self.assertTrue(loc.has_mobs())
         loc.remove_mob(1)
         self.assertEquals(loc.mob_count, tappy.max_mobs_in_loc - 1)

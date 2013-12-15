@@ -131,7 +131,7 @@ class TappyTerrorGame(object):
 def initialize_game_board():
     """Create a Location object for each named region and store them in game_board"""
     for name in floor_list.keys():
-        TappyTerrorGame.game_board[name] = Location()
+        TappyTerrorGame.game_board[name] = Location(name, floor_list[name])
 
 def update_game_board():
     """Update the game board based on the latest player location dump.
@@ -203,13 +203,25 @@ class Location(object):
     Currently just a holder for team and mob count info
     """
 
-    def __init__(self, team=None, mob_count=initial_mob_count):
+    def __init__(self,
+                 location_name,
+                 location_bounds,
+                 team=None,
+                 mob_count=initial_mob_count):
         """Make a location.
         
         Arguments:
+        - `location_name`: name of the location
+        - `location_bounds`: Polygon definining the bounds
         - `team`: The team that currently owns this Location
         - `mob_count`: Number of mobs in the Location
         """
+        if location_name is None:
+            raise ValueError('Locations must be named')
+        if not isinstance(location_bounds, Polygon):
+            raise TypeError('bounds must be a tappy.Polygon object')
+        self.name = location_name
+        self.bounds = location_bounds
         self.team = team
         self.mob_count = mob_count
     
