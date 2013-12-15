@@ -29,6 +29,10 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         # and really that should be mocked out or something to avoid the
         # file write while testing
         tappy.draw_board_image(dummy_game_board, tappy.floor_list)
+    
+    def test_start_game(self):
+        game = tappy.TappyTerrorGame()
+        game.tick()
 
 class LocationTestCase(unittest.TestCase):
     def test_mob_spawn(self):

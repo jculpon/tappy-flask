@@ -12,6 +12,7 @@ from PIL import Image, ImageDraw
 import time
 import os
 import errno
+import random
 
 # Flask setup
 from flask import Flask, render_template
@@ -105,8 +106,97 @@ max_mobs_in_loc = 25
 # Number of mobs spawned in a location by default
 initial_mob_count = 1
 
+# Game logic
+class TappyTerrorGame(object):
+    """Main thread equivelent for Tappy Terror
 
-# Game logic    
+    Initializes data structures and manages game updates."""
+    # Dictionary of all the locations, keyed to the name from the AMD api. 
+    # Stores Count and controlling team
+    game_board = {} 
+    # List of all Active players in the game and their points
+    active_players = {} 
+    # Team point totals
+    team_points = {"red": 0, "blue": 0, "yellow": 0, "green": 0} 
+    # Most recently generated map image, relative to script's starting dir
+    last_saved_filename = ""
+    def __init__(self):
+        initialize_game_board()
+
+    def tick(self):
+        update_game_board()
+        update_mobs()
+        shelve_data()
+
+def initialize_game_board():
+    """Create a Location object for each named region and store them in game_board"""
+    for name in floor_list.keys():
+        TappyTerrorGame.game_board[name] = Location()
+
+def update_game_board():
+    """Update the game board based on the latest player location dump.
+
+    Stuff not done right:
+    1. if locations overlap, the current implementation will count
+       players that lie within the overlap as being in both regions.
+    2. The team flag updates are currently unsafe.#temporary place right now for testing
+    3. Really, this sould be triggered by the updates coming in rather than
+       us polling.
+    """
+    # this is the super-naive way to do this, but we don't have many locations
+    # so n^2 will be good enough for now.
+
+    # dict of bounding_box -> {"team_name": count}
+    team_counts = {} 
+
+    # probably a more elegant way to do this but it gets the job done
+    for area_name, loc in TappyTerrorGame.game_board.items():
+        team_counts[area_name] = dict([(t,0) for t in TappyTerrorGame.team_points])
+
+    #Get the location dump of where all the players are
+    players = get_location_dump()
+    
+    # tally up the number of players on each team in each location
+    for p in players:
+        for n, l in TappyTerrorGame.game_board.items():
+            if p["area"] == n:
+                team_counts[n][p["team"]] += 1
+
+    # update locations's teams with the new owners
+    for name, team_count in team_counts.items():
+        # not sure that this method is always going to do what we want
+        # in the case of ties on the player counts, but it'll do something
+        # consistently at least :)
+        top_team = max(team_count, key=team_count.get)
+        # giving away locations when *nobody* is there is a bit mean; let
+        # the old team keep it in that case
+        if team_count[top_team] != 0:
+            TappyTerrorGame.game_board[name].team = top_team
+
+    #Draw the image of the current gameboard
+    draw_board_image(TappyTerrorGame.game_board, floor_list) 
+
+def update_mobs():
+    """increase mob count in any location that already has a mob
+    """
+    for name, loc in TappyTerrorGame.game_board.items():
+        assert loc.mob_count >= 0, "weirdness: negative mob count"
+
+        if loc.has_mobs:
+            loc.spawn_mob()
+
+def shelve_data():
+    pass
+
+def get_location_dump(filter=None, value=None):
+    """Dummy implementation of get_location_dump for testing
+    """
+    return [{"user": "10", "team": "blue", "area": "NOC"},
+            {"user": "11", "team": "red", "area": "Core Staff Area"},
+            {"user": "12", "team": "green", "area": random.choice(floor_list.keys())},
+            {"user": "13", "team": "green", "area": random.choice(floor_list.keys())},
+            {"user": "14", "team": "yellow", "area": random.choice(floor_list.keys())}]
+
 class Location(object):
     """Handles all information for locations in Tappy Terror
 
