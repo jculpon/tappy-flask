@@ -13,6 +13,7 @@ import time
 import os
 import errno
 import random
+import shelve
 
 # Flask setup
 from flask import Flask, render_template
@@ -186,7 +187,12 @@ def update_mobs():
             loc.spawn_mob()
 
 def shelve_data():
-    pass
+    s = shelve.open('TappyData.dat')
+    s['gameboard'] = TappyTerrorGame.game_board
+    s['activeplayers'] = TappyTerrorGame.active_players
+    s['teampoints'] = TappyTerrorGame.team_points
+    s['lastsave'] = TappyTerrorGame.last_saved_filename
+    s.close()
 
 def get_location_dump(filter=None, value=None):
     """Dummy implementation of get_location_dump for testing
