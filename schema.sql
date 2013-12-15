@@ -1,0 +1,21 @@
+-- Tappy Terror's game state consists of:
+-- * A list of locations.
+-- * A list of active players
+-- * A list of teams
+-- A location is: (name, bounds, controlling team, mob count)
+--     only the last two are mutable, and name uniqely identifies a loc
+-- An active player is:
+--     tbd
+-- A team is: (team_name, score)
+--     tbd  
+-- We mostly care about the *latest* update but it'd be nice to have
+-- state snapshots for every update we do so that we can replay the game
+-- or otherwise do fancy stuff as we desire.
+-- I think we should have a db like this:
+--   update_id, update_timestamp
+-- which stores the last update. If we support multiple games in one db,
+-- we should add a game_id to that table
+-- Mutable state components of the game should always have an update_id
+-- so that fetching all the state we need is something like:
+-- fetch_location_details(update_id), fetch_players(update_id), fetch_teams(update_id)
+
