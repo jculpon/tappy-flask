@@ -113,6 +113,10 @@ max_mobs_in_loc = 25
 # Number of mobs spawned in a location by default
 initial_mob_count = 1
 
+#points_per_control_tick - points for holding a territory per minute
+points_per_control_tick = 30.0
+
+
 # Game logic
 class TappyTerrorGame(object):
     """Main thread equivelent for Tappy Terror
@@ -260,6 +264,11 @@ class Location(object):
         """Returns true if and only if the location has mobs in it
         """
         return self.mob_count > 0
+        
+    def score(self):
+        """Return the score earned for this territory by the controlling team
+        """
+        return points_per_control_tick
 
 class Polygon (object):
     """Polygon stores the bounds for rooms.
