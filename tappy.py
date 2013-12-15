@@ -122,12 +122,10 @@ class TappyTerrorGame(object):
     """Main thread equivelent for Tappy Terror
 
     Initializes data structures and manages game updates."""
-    # List of all Active players in the game and their points
-    active_players = {} 
-    # Team point totals
-    team_points = {"red": 0, "blue": 0, "yellow": 0, "green": 0} 
     def __init__(self):
         self.game_board = {}
+        self.active_players = {}
+        self.team_points = {"red": 0, "blue": 0, "yellow": 0, "green": 0}
         self._initialize_game_board()
 
     def _initialize_game_board(self):
@@ -157,7 +155,7 @@ class TappyTerrorGame(object):
 
         # probably a more elegant way to do this but it gets the job done
         for area_name, loc in self.game_board.items():
-            team_counts[area_name] = dict([(t,0) for t in TappyTerrorGame.team_points])
+            team_counts[area_name] = dict([(t,0) for t in self.team_points])
 
         #Get the location dump of where all the players are
         players = get_location_dump()
