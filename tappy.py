@@ -32,6 +32,13 @@ app.config.from_envvar('TAPPY_SETTINGS', silent=True)
 @app.route('/game')
 def game_index():
     """Render the current state of the game for the web"""
+    s = shelve.open('TappyData.dat')
+    gb = s['gameboard']
+    ap = s['activeplayers']
+    tp = s['teampoints']
+    ls = s['lastsave']
+    s.close()
+
     return render_template('game.html')
 
 # End Flask setup
