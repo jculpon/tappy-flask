@@ -122,84 +122,80 @@ class TappyTerrorGame(object):
     """Main thread equivelent for Tappy Terror
 
     Initializes data structures and manages game updates."""
-    # Dictionary of all the locations, keyed to the name from the AMD api. 
-    # Stores Count and controlling team
-    game_board = {} 
     # List of all Active players in the game and their points
     active_players = {} 
     # Team point totals
     team_points = {"red": 0, "blue": 0, "yellow": 0, "green": 0} 
     def __init__(self):
-        initialize_game_board()
+        self.game_board = {}
+        self._initialize_game_board()
+
+    def _initialize_game_board(self):
+        for name in floor_list.keys():
+            self.game_board[name] = Location(name, floor_list[name])
 
     def tick(self):
-        update_game_board()
-        update_mobs()
-        shelve_data()
+        self._update_game_board()
+        self._update_mobs()
+        self._shelve_data()
 
-def initialize_game_board():
-    """Create a Location object for each named region and store them in game_board"""
-    for name in floor_list.keys():
-        TappyTerrorGame.game_board[name] = Location(name, floor_list[name])
+    def _update_game_board(self):
+        """Update the game board based on the latest player location dump.
 
-def update_game_board():
-    """Update the game board based on the latest player location dump.
+        Stuff not done right:
+        1. if locations overlap, the current implementation will count
+           players that lie within the overlap as being in both regions.
+        2. The team flag updates are currently unsafe.
+        3. Really, this sould be triggered by the updates coming in rather than
+           us polling.
+        """
+        # this is the super-naive way to do this, but we don't have many
+        # locations so n^2 will be good enough for now.
 
-    Stuff not done right:
-    1. if locations overlap, the current implementation will count
-       players that lie within the overlap as being in both regions.
-    2. The team flag updates are currently unsafe.#temporary place right now for testing
-    3. Really, this sould be triggered by the updates coming in rather than
-       us polling.
-    """
-    # this is the super-naive way to do this, but we don't have many locations
-    # so n^2 will be good enough for now.
+        # dict of bounding_box -> {"team_name": count}
+        team_counts = {} 
 
-    # dict of bounding_box -> {"team_name": count}
-    team_counts = {} 
+        # probably a more elegant way to do this but it gets the job done
+        for area_name, loc in self.game_board.items():
+            team_counts[area_name] = dict([(t,0) for t in TappyTerrorGame.team_points])
 
-    # probably a more elegant way to do this but it gets the job done
-    for area_name, loc in TappyTerrorGame.game_board.items():
-        team_counts[area_name] = dict([(t,0) for t in TappyTerrorGame.team_points])
-
-    #Get the location dump of where all the players are
-    players = get_location_dump()
+        #Get the location dump of where all the players are
+        players = get_location_dump()
     
-    # tally up the number of players on each team in each location
-    for p in players:
-        for n, l in TappyTerrorGame.game_board.items():
-            if p["area"] == n:
-                team_counts[n][p["team"]] += 1
+        # tally up the number of players on each team in each location
+        for p in players:
+            for n, l in self.game_board.items():
+                if p["area"] == n:
+                    team_counts[n][p["team"]] += 1
 
-    # update locations's teams with the new owners
-    for name, team_count in team_counts.items():
-        # not sure that this method is always going to do what we want
-        # in the case of ties on the player counts, but it'll do something
-        # consistently at least :)
-        top_team = max(team_count, key=team_count.get)
-        # giving away locations when *nobody* is there is a bit mean; let
-        # the old team keep it in that case
-        if team_count[top_team] != 0:
-            TappyTerrorGame.game_board[name].team = top_team
+        # update locations's teams with the new owners
+        for name, team_count in team_counts.items():
+            # not sure that this method is always going to do what we want
+            # in the case of ties on the player counts, but it'll do something
+            # consistently at least :)
+            top_team = max(team_count, key=team_count.get)
+            # giving away locations when *nobody* is there is a bit mean; let
+            # the old team keep it in that case
+            if team_count[top_team] != 0:
+                self.game_board[name].team = top_team
 
-    #Draw the image of the current gameboard
-    draw_board_image(TappyTerrorGame.game_board, floor_list) 
+        #Draw the image of the current gameboard
+        draw_board_image(self.game_board, floor_list) 
 
-def update_mobs():
-    """increase mob count in any location that already has a mob
-    """
-    for name, loc in TappyTerrorGame.game_board.items():
-        assert loc.mob_count >= 0, "weirdness: negative mob count"
+    def _update_mobs(self):
+        """increase mob count in any location that already has a mob
+        """
+        for name, loc in self.game_board.items():
+            assert loc.mob_count >= 0, "weirdness: negative mob count"
+            if loc.has_mobs:
+                loc.spawn_mob()
 
-        if loc.has_mobs:
-            loc.spawn_mob()
-
-def shelve_data():
-    s = shelve.open('TappyData.dat')
-    s['gameboard'] = TappyTerrorGame.game_board
-    s['activeplayers'] = TappyTerrorGame.active_players
-    s['teampoints'] = TappyTerrorGame.team_points
-    s.close()
+    def _shelve_data(self):
+        s = shelve.open('TappyData.dat')
+        s['gameboard'] = self.game_board
+        s['activeplayers'] = self.active_players
+        s['teampoints'] = self.team_points
+        s.close()
 
 def get_location_dump(filter=None, value=None):
     """Dummy implementation of get_location_dump for testing
@@ -219,7 +215,7 @@ class Location(object):
     def __init__(self,
                  location_name,
                  location_bounds,
-                 team=None,
+                 controlling_team=None,
                  mob_count=initial_mob_count):
         """Make a location.
         
@@ -235,7 +231,7 @@ class Location(object):
             raise TypeError('bounds must be a tappy.Polygon object')
         self.name = location_name
         self.bounds = location_bounds
-        self.team = team
+        self.team = controlling_team
         self.mob_count = mob_count
     
     def spawn_mob(self, count=1):
