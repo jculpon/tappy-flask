@@ -17,6 +17,7 @@ CREATE TABLE game_snapshots (
        id INTEGER PRIMARY KEY AUTOINCREMENT,
        update_time INTEGER
 );
+DROP INDEX IF EXISTS snapshot_time_idx;
 CREATE UNIQUE INDEX snapshot_time_idx ON game_snapshots(update_time);
 
 DROP TABLE IF EXISTS teams;
@@ -85,4 +86,5 @@ CREATE TABLE players (
        amd_user_id INTEGER UNIQUE NOT NULL,
        display_name TEXT
 );
+DROP INDEX IF EXISTS player_amd_idx;
 CREATE UNIQUE INDEX player_amd_idx ON players(amd_user_id);
