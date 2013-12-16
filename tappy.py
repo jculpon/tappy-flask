@@ -18,17 +18,28 @@ import sqlite3
 import datetime
 
 # Flask setup
-from flask import Flask, render_template
+from flask import Flask, render_template, g
 
 app = Flask(__name__)
 
 # Dev settings
 app.config.update(dict(
     DEBUG=True,
-    SECRET_KEY='Not so secret dev key'
+    SECRET_KEY='Not so secret dev key',
+    DATABASE='./tappy.db'
 ))
 # Override dev settings from the TAPPY_SETTINGS envvar if present
 app.config.from_envvar('TAPPY_SETTINGS', silent=True)
+
+@app.before_request
+def before_flask_request():
+    g.db = connect_flask_db()
+
+@app.teardown_request
+def teardown_flask_request(exception):
+    db = getattr(g, 'db', None)
+    if db is not None:
+        db.close()
 
 @app.route('/')
 @app.route('/game')
@@ -97,6 +108,15 @@ def symlink_with_overwrite(src, dst):
         os.remove(dst)
         os.symlink(src, dst)
 
+def connect_flask_db():
+    """Connect to the SQLite database configured in flask
+    """
+    return sqlite3.connect(app.config['DATABASE'])
+    
+def init_flask_db():
+    with closing(connect_flask_db()) as db:
+        create_game_db(db)
+        
 def connect_memory_db():
     """Connect to an in-memory SQLite db
     """
