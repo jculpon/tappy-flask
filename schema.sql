@@ -1,13 +1,3 @@
--- Tappy Terror's game state consists of:
--- * A list of locations.
--- * A list of active players
--- * A list of teams
--- A location is: (name, bounds, controlling team, mob count)
---     only the last two are mutable, and name uniqely identifies a loc
--- An active player is:
---     tbd
--- A team is: (team_name, score)
---     tbd  
 -- We mostly care about the *latest* update but it'd be nice to have
 -- state snapshots for every update we do so that we can replay the game
 -- or otherwise do fancy stuff as we desire.
@@ -19,3 +9,80 @@
 -- so that fetching all the state we need is something like:
 -- fetch_location_details(update_id), fetch_players(update_id), fetch_teams(update_id)
 
+-- If we update once/min over the course of three days we have:
+-- 24 hours/day * 3 days * 60 min/hour * 1 update/min = 4320 state snapshots
+-- That shouldn't be too bad to just do them naively...
+DROP TABLE IF EXISTS game_snapshots;
+CREATE TABLE game_snapshots (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       update_time INTEGER
+);
+CREATE UNIQUE INDEX snapshot_time_idx ON game_snapshots(update_time);
+
+DROP TABLE IF EXISTS teams;
+CREATE TABLE teams (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       color TEXT NOT NULL,
+       name TEXT UNIQUE NOT NULL
+);
+-- could index by name if we have a lot of teams, current plans for only ~4
+
+DROP TABLE IF EXISTS team_ephemera;
+CREATE TABLE team_ephemera (
+       snapshot_id NOT NULL,
+       team_id NOT NULL,
+       score INTEGER NOT NULL default 0,
+       PRIMARY KEY (snapshot_id, team_id)
+); -- add WITHOUT ROWID if using sqlite >=3.8.2
+
+DROP TABLE IF EXISTS bounds_types;
+CREATE TABLE bounds_types (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       name TEXT UNIQUE NOT NULL
+);
+INSERT INTO bounds_types(name) VALUES ('rect'), ('poly');
+
+DROP TABLE IF EXISTS bounds_vertex_lists;
+CREATE TABLE bounds_vertex_lists (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       bounds_type INTEGER NOT NULL,
+       FOREIGN KEY(bounds_type) REFERENCES bounds_types(id)
+);
+
+DROP TABLE IF EXISTS bounds_verticies;
+CREATE TABLE bounds_verticies (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       x INTEGER NOT NULL,
+       y INTEGER NOT NULL,
+       list_id INTEGER NOT NULL,
+       FOREIGN KEY(list_id) REFERENCES bounds_vertex_lists(id)
+);
+CREATE INDEX vertex_list_idx ON bounds_verticies(list_id);
+
+DROP TABLE IF EXISTS locations;
+CREATE TABLE locations (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       name TEXT UNIQUE NOT NULL,
+       bounds_list_id INTEGER NOT NULL,
+       FOREIGN KEY(bounds_list_id) REFERENCES bounds_vertex_lists(id)
+);
+
+DROP TABLE IF EXISTS location_ephemera;
+CREATE TABLE location_ephemera (
+       location_id INTEGER NOT NULL,
+       snapshot_id INTEGER NOT NULL,
+       controlling_team_id INTEGER,
+       mob_count INTEGER NOT NULL default 0,
+       PRIMARY KEY(snapshot_id, location_id),
+       FOREIGN KEY(location_id) REFERENCES locations(id),
+       FOREIGN KEY(snapshot_id) REFERENCES game_snapshots(id),
+       FOREIGN KEY(controlling_team_id) REFERENCES teams(id)
+); -- add WITHOUT ROWID if using sqlite >=3.8.2
+
+DROP TABLE IF EXISTS players;
+CREATE TABLE players (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       amd_user_id INTEGER UNIQUE NOT NULL,
+       display_name TEXT
+);
+CREATE UNIQUE INDEX player_amd_idx ON players(amd_user_id);
