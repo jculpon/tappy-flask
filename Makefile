@@ -18,7 +18,8 @@ test: db
 
 clean:
 	find . -name '*.py[co]' -exec rm -f {} \;
-	rm -f tappy.db
+	find . -name 'tappymap*.png' -exec rm -f {} \;
+	rm -f tappy.db static/latest.png
 
 db: tappy.db
 
