@@ -33,6 +33,7 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         # file write while testing
         tappy.draw_board_image(dummy_game_board, tappy.floor_list)
     
+class TappyTerrorGameTestCase(unittest.TestCase):
     def test_start_game(self):
         game = tappy.TappyTerrorGame()
         game.tick()
