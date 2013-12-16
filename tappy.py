@@ -9,11 +9,14 @@
 """
 
 from PIL import Image, ImageDraw
+from contextlib import closing
 import time
 import os
 import errno
 import random
 import shelve
+import sqlite3
+import datetime
 
 # Flask setup
 from flask import Flask, render_template
@@ -42,6 +45,8 @@ def game_index():
 
 # End Flask setup
 
+
+# Helpers for getting game state ready for the web
 def draw_board_image(game_board, rooms):
     """Draws an image representing the current state of the game
 
@@ -99,7 +104,19 @@ def symlink_with_overwrite(src, dst):
         os.remove(dst)
         os.symlink(src, dst)
 
-    
+def connect_memory_db():
+    """Connect to an in-memory SQLite db
+    """
+    return sqlite3.connect(':memory:')
+
+def create_game_db(db):
+    """Create the db schema for tappy terror from the given schema file
+    """
+    with open('schema.sql') as f:
+        db.cursor().executescript(f.read())
+    with open('hope.sql') as f:
+        db.cursor().executescript(f.read())
+    db.commit()
 
 # Game config
 # These constants are the variables that control all the
@@ -194,6 +211,149 @@ class TappyTerrorGame(object):
         s['activeplayers'] = self.active_players
         s['teampoints'] = self.team_points
         s.close()
+    
+    def snapshot_to_db(self, db):
+        """Snapshot the game state to the given database
+
+        Writes a snapshot of the game state to the given sqlite3 database.
+        The database is assumed to have the correct schema etc.
+        
+        Params:
+        - db: a connected sqlite3 database
+        """
+        if not isinstance(db, sqlite3.Connection):
+            raise TypeError('db is not a sqlite3 connection')
+        
+        # Creates a transaction that rolls back on failure and
+        # commits at the end of the block. See 
+        # http://docs.python.org/2/library/sqlite3.html#using-the-connection-as-a-context-manager
+        with db:
+            #actual db writes go here
+            #insert snapshot time and get snapshot id for subsequent stuff
+            now = datetime.datetime.utcnow()
+            now_milliseconds = (
+                time.mktime(now.timetuple())*1000 + now.microsecond / 1000
+            )
+            result = db.execute(
+                'INSERT INTO game_snapshots(update_time) VALUES (?)',
+                [now_milliseconds]
+            )
+            update_id = result.lastrowid
+            #_snapshot_game_board(db)
+            db.executemany(
+                'INSERT INTO location_ephemera'
+                '(snapshot_id, location_id, controlling_team_id, mob_count)'
+                'VALUES (?, '
+                        '(SELECT id FROM locations WHERE name=?), '
+                        '(SELECT id FROM teams WHERE name=?), '
+                        '?)',
+                ((update_id, l.name, l.team, l.mob_count)
+                 for l in self.game_board.values())
+            )
+            #_snapshot_team_points(db)
+            db.executemany(
+                'INSERT INTO team_ephemera(snapshot_id, team_id, score) '
+                'VALUES (?, (SELECT id FROM teams WHERE name=?), ?)',
+                ((update_id, k, v) for (k,v) in self.team_points.items())
+            )
+            #_snapshot_active_players(db)
+            db.executemany(
+                'INSERT OR REPLACE INTO '
+                'players(id, amd_user_id, display_name) '
+                'VALUES (?, ?, ?)',
+                ((x['id'], x['amd_user_id'], x['display_name'])
+                 for x in self.active_players)
+            )
+
+    @staticmethod
+    def load_from_snapshot(db):
+        """Construct a new game instance from the given database
+
+        Params:
+        - db: a connected sqlite3 database
+        """
+        if not isinstance(db, sqlite3.Connection):
+            raise TypeError('db is not a sqlite3 connection')
+        
+        with db:
+            game = TappyTerrorGame()
+
+            result = db.execute('SELECT id FROM game_snapshots ORDER BY update_time DESC LIMIT 1')
+            snapshot_id = result.fetchone()[0]
+
+            teams_result = db.execute(
+                'SELECT teams.id, teams.color, teams.name, te.score '
+                'FROM team_ephemera AS te JOIN teams ON teams.id = te.team_id '
+                'WHERE te.snapshot_id = ?',
+                [snapshot_id]
+            )
+            team_id_to_name = {}
+            for team_row in teams_result.fetchall():
+                (id, color, name, score) = team_row
+                game.team_points[name] = score
+                team_id_to_name[id] = name
+            
+            #_snapshot_game_board(db)
+            locations_result = db.execute(
+                'SELECT l.name, l.bounds_list_id, '
+                'le.controlling_team_id, le.mob_count '
+                'FROM location_ephemera AS le '
+                'INNER JOIN locations AS l ON le.location_id = l.id '
+                'WHERE le.snapshot_id = ?',
+                [snapshot_id]
+            )
+            bounds_ids = []
+            bounds_id_to_name = {}
+            for location_row in locations_result.fetchall():
+                (name, bounds_id, team_id, mob_count) = location_row
+                # make the location without bounds for now, will fetch all
+                # bounds and update the locations in a subsequent query
+                team = team_id_to_name.get(team_id)
+                game.game_board[name] = Location(
+                    name, None, team, mob_count
+                )
+                bounds_ids.append(bounds_id)
+                bounds_id_to_name[bounds_id] = name
+            bounds_results = db.execute(
+                'SELECT v.x, v.y, v.list_id, t.name '
+                'FROM bounds_vertices AS v '
+                'INNER JOIN bounds_vertex_lists AS l ON l.id = v.list_id '
+                'INNER JOIN bounds_types AS t ON l.bounds_type = t.id '
+                'WHERE v.list_id IN (%s)' % (', '.join('?' for x in bounds_ids)),
+                bounds_ids
+            )
+            vertex_lists = {}
+            list_id_to_bounds_type = {}
+            for vertex_row in bounds_results:
+                (x, y, list_id, bounds_type) = vertex_row
+                if list_id not in vertex_lists:
+                    vertex_lists[list_id] = [(x, y)]
+                    list_id_to_bounds_type[list_id] = bounds_type
+                else:
+                    assert list_id_to_bounds_type[list_id] == bounds_type
+                    vertex_lists[list_id].append((x, y))
+            for list_id in vertex_lists:
+                p = Polygon(
+                    list_id_to_bounds_type[list_id],
+                    vertex_lists[list_id]
+                )
+                game.game_board[bounds_id_to_name[list_id]].bounds = p
+                
+
+            #_snapshot_active_players(db)
+            players_result = db.execute(
+                'SELECT id, amd_user_id, display_name FROM players'
+            )
+            for player_row in players_result.fetchall():
+                (id, amd_user_id, display_name) = player_row
+                player = {
+                    'id': id,
+                    'amd_user_id': amd_user_id,
+                    'display_name': display_name
+                }
+                game.active_players.append(player)
+            
+            return game
 
 def get_location_dump(filter=None, value=None):
     """Dummy implementation of get_location_dump for testing
@@ -225,7 +385,7 @@ class Location(object):
         """
         if location_name is None:
             raise ValueError('Locations must be named')
-        if not isinstance(location_bounds, Polygon):
+        if location_bounds is not None and not isinstance(location_bounds, Polygon):
             raise TypeError('bounds must be a tappy.Polygon object')
         self.name = location_name
         self.bounds = location_bounds

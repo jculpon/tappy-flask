@@ -32,11 +32,35 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         # and really that should be mocked out or something to avoid the
         # file write while testing
         tappy.draw_board_image(dummy_game_board, tappy.floor_list)
-    
+
 class TappyTerrorGameTestCase(unittest.TestCase):
     def test_start_game(self):
         game = tappy.TappyTerrorGame()
         game.tick()
+
+    def test_snapshot(self):
+        mem_db = tappy.connect_memory_db()
+        tappy.create_game_db(mem_db)
+        
+        empty_game = tappy.TappyTerrorGame()
+        empty_game.snapshot_to_db(mem_db)
+        roundtrip = tappy.TappyTerrorGame.load_from_snapshot(mem_db)
+        self.assertIsInstance(roundtrip, tappy.TappyTerrorGame)
+
+        self.assertEqual(empty_game.game_board.keys(), roundtrip.game_board.keys())
+        self.assertDictEqual(empty_game.game_board, roundtrip.game_board)
+        self.assertDictEqual(empty_game.active_players, roundtrip.active_players)
+        self.assertDictEqual(empty_game.team_points, roundtrip.team_points)
+
+        full_game = tappy.TappyTerrorGame()
+        full_game.tick()
+        self.assertNotEqual(empty_game, full_game)
+        full_game.snapshot_to_db(mem_db)
+        roundtrip = tappy.TappyTerrorGame.load_from_snapshot(mem_db)
+        self.assertDictEqual(full_game.game_board, roundtrip.game_board)
+        self.assertDictEqual(full_game.active_players, roundtrip.active_players)
+        self.assertDictEqual(full_game.team_points, roundtrip.team_points)
+
 
 class LocationTestCase(unittest.TestCase):
     def test_mob_spawn(self):
