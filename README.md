@@ -19,10 +19,7 @@ This project was based on discussions with the OpenAMD team for [The Next HOPE](
 
 TODOs
 -----
-- [ ] Makefile
-- [ ] Initial commit of the views
-- [ ] Initial port of game logic
-- [ ] TESTS
-- [ ] Getting started documentation
-- [ ] Determine if OpenAMD data still exists
-- [ ] Pump for location data
+- Getting started documentation
+- Style the index pages
+- Determine if OpenAMD data still exists
+- Pump for location data
