@@ -33,7 +33,9 @@ CREATE TABLE team_ephemera (
        snapshot_id NOT NULL,
        team_id NOT NULL,
        score INTEGER NOT NULL default 0,
-       PRIMARY KEY (snapshot_id, team_id)
+       PRIMARY KEY (snapshot_id, team_id),
+       FOREIGN KEY(snapshot_id) REFERENCES game_snapshots(id),
+       FOREIGN KEY(team_id) REFERENCES teams(id)
 ); -- add WITHOUT ROWID if using sqlite >=3.8.2
 
 DROP TABLE IF EXISTS bounds_types;
