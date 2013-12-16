@@ -69,6 +69,36 @@ class LocationTestCase(unittest.TestCase):
         loc.remove_mob(tappy.max_mobs_in_loc)
         self.assertEquals(loc.mob_count, 0)
 
+    def test_location_equals(self):
+        lhs_rect = tappy.Location(
+            'name',
+            tappy.Polygon('rect', [(0,0), (1,1)]),
+            'some team',
+            tappy.max_mobs_in_loc
+        )
+        self.assertEquals(lhs_rect, lhs_rect)
+
+        rhs_rect = tappy.Location(
+            'name',
+            tappy.Polygon('rect', [(0,0), (1,1)]),
+            'some team',
+            tappy.max_mobs_in_loc
+        )
+        self.assertEquals(lhs_rect, rhs_rect)
+        self.assertEquals(rhs_rect, lhs_rect)
+
+        poly = tappy.Location(
+            'name',
+            tappy.Polygon('poly', [(0,0), (1, 0), (0, 1)]),
+            'some team',
+            tappy.max_mobs_in_loc
+        )
+        self.assertEquals(poly, poly)
+        self.assertNotEqual(lhs_rect, poly)
+        self.assertNotEqual(rhs_rect, poly)
+        self.assertNotEqual(poly, lhs_rect)
+        self.assertNotEqual(poly, rhs_rect)
+        
 class PolygonTestCase(unittest.TestCase):
     # Incredibly lame tests for now because we basically did no validation
     # or any sanity checking on the polygon class originally, so there's no

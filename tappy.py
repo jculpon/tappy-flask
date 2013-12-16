@@ -231,6 +231,27 @@ class Location(object):
         self.bounds = location_bounds
         self.team = controlling_team
         self.mob_count = mob_count
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if not isinstance(other, Location):
+            return False
+
+        return ((self.name == other.name)
+                and (self.team == other.team)
+                and (self.bounds.poly_type == other.bounds.poly_type)
+                and (self.bounds.vertices == other.bounds.vertices)
+                and (self.mob_count == other.mob_count))
+
+    def __neq__(self, other):
+        return not (self == other)
+
+    def __hash__(self):
+        seed = 0x34567
+        return (seed ^ hash(self.name) ^ hash(self.team)
+                ^ hash(self.bounds.poly_type) ^ hash(self.bounds.vertices)
+                ^ hash(self.mob_count))
     
     def spawn_mob(self, count=1):
         """Spawn a mob in this location
