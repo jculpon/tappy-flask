@@ -23,12 +23,16 @@
         <th width="127"> Team </th>
         <th width="93"> Mob Count </th>
     </tr>
-	<!-- jinjafy: for name in gameboard: -->
-		<tr>
-		<td width="162"> template-name </td>
-		<td width="127"> template-gameboard[name].team</td>
-		<td width="93"> template-gameboard[name].mob_count</td>
+
+    {% for (name, location) in game_board.items() %}
+    <tr>
+		<td width="162">{{ name }}</td>
+		<td width="127">{{ location.controlling_team|default('Up for grabs!') }}</td>
+		<td width="93">{{ location.mob_count }}</td>
 		</tr>
+    {% else %}
+    <tr><td>Huh, no data yet...</td></tr>
+    {% endfor %}
 </table>
 
 <br />
@@ -45,11 +49,14 @@
             	<th> Score </th>
         	</tr>
 			
-			<!-- jinjafy: for team, pnts in teamPoints.items(): -->
-				<tr>
-				<td> template-team </td>
-				<td> template-pnts </td>
-				</tr>
+            {% for (name, score) in team_scores.items() %}
+			<tr>
+				<td> {{ name }} </td>
+				<td> {{ score }} </td>
+			</tr>
+            {% else %}
+            <tr><td>No teams have scored yet!</td></tr>
+            {% endfor %}
     	</table>
     </div>
 
@@ -62,11 +69,15 @@
             	<th> Score </th>
         	</tr>
 			
-			<!-- jinjafy: for player, pnts in activePlayers.items(): -->
-				<tr>
-				<td> template-player </td>
-				<td> template-pnts </td>
-				</tr>
+
+            {% for player in players %}
+			<tr>
+				<td>{{ player.display_name|default('Anon ' + player.id) }} </td>
+				<td>{{ player.points|default('scoreless') }}</td>
+			</tr>
+            {% else %}
+            <tr><td>Hmm, no player data yet...</td></tr>
+            {% endfor %}
     	</table>
     </div>
 </div>

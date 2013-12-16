@@ -45,7 +45,14 @@ def teardown_flask_request(exception):
 @app.route('/game')
 def game_index():
     """Render the current state of the game for the web"""
-    return render_template('game.html')
+    game_state = TappyTerrorGame.load_from_snapshot(g.db)
+
+    return render_template(
+        'game.html',
+        game_board=game_state.game_board,
+        team_scores=game_state.team_points,
+        players=game_state.active_players        
+    )
 
 # End Flask setup
 
@@ -284,7 +291,13 @@ class TappyTerrorGame(object):
             game = TappyTerrorGame()
 
             result = db.execute('SELECT id FROM game_snapshots ORDER BY update_time DESC LIMIT 1')
-            snapshot_id = result.fetchone()[0]
+            snapshot_row = result.fetchone()
+
+            if snapshot_row is None:
+                # TODO load without snapshot?
+                return game
+
+            snapshot_id = snapshot_row[0]
 
             teams_result = db.execute(
                 'SELECT teams.id, teams.color, teams.name, te.score '
