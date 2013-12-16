@@ -52,15 +52,15 @@ CREATE TABLE bounds_vertex_lists (
        FOREIGN KEY(bounds_type) REFERENCES bounds_types(id)
 );
 
-DROP TABLE IF EXISTS bounds_verticies;
-CREATE TABLE bounds_verticies (
+DROP TABLE IF EXISTS bounds_vertices;
+CREATE TABLE bounds_vertices (
        id INTEGER PRIMARY KEY AUTOINCREMENT,
        x INTEGER NOT NULL,
        y INTEGER NOT NULL,
        list_id INTEGER NOT NULL,
        FOREIGN KEY(list_id) REFERENCES bounds_vertex_lists(id)
 );
-CREATE INDEX vertex_list_idx ON bounds_verticies(list_id);
+CREATE INDEX vertex_list_idx ON bounds_vertices(list_id);
 
 DROP TABLE IF EXISTS locations;
 CREATE TABLE locations (
