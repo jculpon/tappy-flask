@@ -14,7 +14,6 @@ import time
 import os
 import errno
 import random
-import shelve
 import sqlite3
 import datetime
 
@@ -35,12 +34,6 @@ app.config.from_envvar('TAPPY_SETTINGS', silent=True)
 @app.route('/game')
 def game_index():
     """Render the current state of the game for the web"""
-    s = shelve.open('TappyData.dat')
-    gb = s['gameboard']
-    ap = s['activeplayers']
-    tp = s['teampoints']
-    s.close()
-
     return render_template('game.html')
 
 # End Flask setup
@@ -152,7 +145,6 @@ class TappyTerrorGame(object):
     def tick(self):
         self._update_game_board()
         self._update_mobs()
-        self._shelve_data()
 
     def _update_game_board(self):
         """Update the game board based on the latest player location dump.
@@ -205,13 +197,6 @@ class TappyTerrorGame(object):
             if loc.has_mobs:
                 loc.spawn_mob()
 
-    def _shelve_data(self):
-        s = shelve.open('TappyData.dat')
-        s['gameboard'] = self.game_board
-        s['activeplayers'] = self.active_players
-        s['teampoints'] = self.team_points
-        s.close()
-    
     def snapshot_to_db(self, db):
         """Snapshot the game state to the given database
 
