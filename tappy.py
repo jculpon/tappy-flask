@@ -319,7 +319,8 @@ class TappyTerrorGame(object):
                 'FROM bounds_vertices AS v '
                 'INNER JOIN bounds_vertex_lists AS l ON l.id = v.list_id '
                 'INNER JOIN bounds_types AS t ON l.bounds_type = t.id '
-                'WHERE v.list_id IN (%s)' % (', '.join('?' for x in bounds_ids)),
+                'WHERE v.list_id IN (%s) '
+                'ORDER BY v.list_id, v.list_rank ' % (', '.join('?' for x in bounds_ids)),
                 bounds_ids
             )
             vertex_lists = {}

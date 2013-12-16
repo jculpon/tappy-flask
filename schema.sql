@@ -58,10 +58,11 @@ CREATE TABLE bounds_vertices (
        x INTEGER NOT NULL,
        y INTEGER NOT NULL,
        list_id INTEGER NOT NULL,
+       list_rank INTEGER NOT NULL,
        FOREIGN KEY(list_id) REFERENCES bounds_vertex_lists(id)
 );
 DROP INDEX IF EXISTS vertex_list_idx;
-CREATE INDEX vertex_list_idx ON bounds_vertices(list_id);
+CREATE INDEX vertex_list_idx ON bounds_vertices(list_id, list_rank);
 
 DROP TABLE IF EXISTS locations;
 CREATE TABLE locations (
