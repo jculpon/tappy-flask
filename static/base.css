@@ -1,0 +1,260 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body * {
+    font-family: sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+}
+
+table {
+    margin: 0 auto;
+}
+    
+
+header {
+    background-color: rgba(24, 129, 31, 0.9);
+    margin: 1em auto;
+}
+
+footer {
+    background-color: rgba(24, 129, 31, 0.9);
+    margin: 1em auto;
+}
+
+footer .footer-block {
+    display: inline-block;
+    position: relative;
+    vertical-align: top;
+    margin: 0;
+    padding: 0;
+}
+
+footer .footer-block p {
+    padding: 0 1em 0 1em;
+    font-family: serif !important;
+    border-right: 1px solid #ccc;
+    min-height: 6em;
+    text-align: center
+}
+
+.board-background {
+    z-index: 1
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.board-background img {
+    width: 100%;
+}
+
+.board-foreground {
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.board-foreground img {
+    width: 100%;
+    opacity: 0.5;
+    filter: alpha(opacity=50)
+}
+
+#map {
+    position:relative;
+    width: 80%;
+    margin: 0 auto;
+}
+
+/*
+ * Code below created via the pure skin builder - 
+ * http://yui.github.io/skinbuilder/?mode=pure
+ */
+body {
+    background-color: #F5F5F5;
+}
+
+/* from PURE buttons-core.css */
+.pure-skin-green .pure-button {
+    /* Structure */
+    display: inline-block;
+    *display: inline; /*IE 6/7*/
+    zoom: 1;
+    line-height: normal;
+    white-space: nowrap;
+    vertical-align: baseline;
+    text-align: center;
+    cursor: pointer;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Firefox: Get rid of the inner focus border */
+.pure-skin-green .pure-button::-moz-focus-inner{
+    padding: 0;
+    border: 0;
+}
+/* end from PURE buttons-core.css */
+/* from PURE buttons.css */
+/*csslint unqualified-attributes:false*/
+
+.pure-skin-green .pure-button {
+    font-size: 100%;
+    *font-size: 90%; /*IE 6/7 - To reduce IE's oversized button text*/
+    *overflow: visible; /*IE 6/7 - Because of IE's overly large left/right padding on buttons */
+    padding: 0.5em 1.5em 0.5em;
+    color: #080808; /* rgba not supported (IE 8) */
+    /* color: rgba(0, 0, 0, 0.80); rgba supported */
+    /* *color: #444; IE 6 & 7 */
+    border: 1px solid #a5a7a5; /*IE 6/7/8*/
+    border: none rgba(0, 0, 0, 0); /*IE9 + everything else*/
+    background-color: #b4b6b4;
+    text-decoration: none;
+    border-radius: 2px;
+    -webkit-font-smoothing: antialiased;
+    /* Transitions */
+    -webkit-transition: 0.1s linear -webkit-box-shadow;
+    -moz-transition: 0.1s linear -moz-box-shadow;
+    -ms-transition: 0.1s linear box-shadow;
+    -o-transition: 0.1s linear box-shadow;
+    transition: 0.1s linear box-shadow;
+}
+
+.pure-skin-green .pure-button-hover,
+.pure-skin-green .pure-button:hover {
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#00000000', GradientType=0);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.05)));
+    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.15));
+    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.05));
+    background-image: -ms-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.15));
+    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.05));
+    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.05));
+}
+
+.pure-skin-green .pure-button:focus {
+    outline: 0;
+}
+.pure-skin-green .pure-button-active,
+.pure-skin-green .pure-button:active {
+    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset, 0 0 6px rgba(0,0,0, 0.20) inset;
+}
+
+.pure-skin-green .pure-button[disabled],
+.pure-skin-green .pure-button-disabled,
+.pure-skin-green .pure-button-disabled:hover,
+.pure-skin-green .pure-button-disabled:active {
+    border: none;
+    background-image: none;
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+    filter: alpha(opacity=40);
+    -khtml-opacity: 0.40;
+    -moz-opacity: 0.40;
+    opacity: 0.40;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.pure-skin-green .pure-button-hidden {
+    display: none;
+}
+
+/* Firefox: Get rid of the inner focus border */
+.pure-skin-green .pure-button::-moz-focus-inner{
+    padding: 0;
+    border: 0;
+}
+
+.pure-skin-green .pure-button-primary,
+.pure-skin-green .pure-button-selected,
+.pure-skin-green a.pure-button-primary,
+.pure-skin-green a.pure-button-selected {
+    background-color: #18811F;
+    color: #fbfefb;
+}
+
+/* foundational CSS */
+.pure-skin-green .pure-table {
+    /* Remove spacing between table cells (from Normalize.css) */
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    border: 1px solid #dedede;
+}
+
+.pure-skin-green .pure-table caption {
+    color: #a6a6a6;
+    font: italic 85%/1 arial, sans-serif;
+    padding: 1em 0;
+    text-align: center;
+}
+
+.pure-skin-green .pure-table td,
+.pure-skin-green .pure-table th {
+    border-left: 1px solid #dedede;/* inner column border */
+    border-width: 0 0 0 1px;
+    font-size: inherit;
+    margin: 0;
+    overflow: visible; /*to make ths where the title is really long work*/
+    padding: 0.3em 0.6em; /* cell padding */
+}
+
+.pure-skin-green .pure-table td:first-child,
+.pure-skin-green .pure-table th:first-child {
+    border-left-width: 0;
+}
+
+.pure-skin-green .pure-table thead {
+    background-color: #d6d7d6;
+    color: #262726;
+    text-align: left;
+    vertical-align: bottom;
+}
+
+/*
+striping:
+   even - #fff (white)
+   odd  - #f2f2f2 (light gray)
+*/
+.pure-skin-green .pure-table td {
+    background-color: #ededed;
+    color: #404040;
+}
+.pure-skin-green .pure-table-odd td {
+    background-color: #dedede;
+    color: #262626;
+}
+
+/* nth-child selector for modern browsers */
+.pure-skin-green .pure-table-striped tr:nth-child(2n-1) td {
+    background-color: #dedede;
+    color: #262626;
+}
+
+
+/* BORDERED TABLES */
+.pure-skin-green .pure-table-bordered td {
+    border-bottom: 1px solid #dedede;
+}
+.pure-skin-green .pure-table-bordered tbody > tr:last-child td,
+.pure-skin-green .pure-table-horizontal tbody > tr:last-child td {
+    border-bottom-width: 0;
+}
+
+/* HORIZONTAL BORDERED TABLES */
+.pure-skin-green .pure-table-horizontal td,
+.pure-skin-green .pure-table-horizontal th {
+    border-width: 0 0 1px 0;
+    border-bottom:1px solid #dedede;
+}
+.pure-skin-green .pure-table-horizontal tbody > tr:last-child td {
+    border-bottom-width: 0;
+}

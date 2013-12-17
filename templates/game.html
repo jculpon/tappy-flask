@@ -2,84 +2,81 @@
 {% block title %}State of the Game!{% endblock %}
 {% block header %}Game Board{% endblock %}
 {% block body %}
-<h3> Description: </h3>
-<p> description of the game goes here </p>
-
-<h3>Current Game Board:</h3>
-
-<div>
-	<div style="z-index:1">
-		<img src="{{ url_for('static', filename='nexthope-floorplan.jpg') }}" width="579" height="549" />
- 	</div>
-	
-	<div style="z-index:2; position:absolute; left: 25px; top: 228px;">
-    	<img src="{{ url_for('static', filename='latest.png') }}" width="579" height="549" style="opacity:0.5;filter:alpha(opacity=50)" />
+<div class="pure-g-r">
+  <div class="pure-u-1">
+    <h3>Current Game Board</h3>
+  </div>
+  <div class="pure-u-1-2">
+    <div id="map">
+      <div class="board-background">
+	    <img src="{{ url_for('static', filename='nexthope-floorplan.jpg') }}" />
+      </div>
+	  
+      <div class="board-foreground">
+        <img src="{{ url_for('static', filename='latest.png') }}"  />
+      </div>
     </div>
-</div>
+  </div>
 
-<table width="400" style="position:absolute; left: 605px; top: 214px;">
-	<tr>
-    	<th width="162"> Area Name </th>
+  <div class="pure-u-1-2" id="location-info">
+    <table class="pure-table pure-table-horizontal">
+	  <tr>
+        <th width="162"> Area Name </th>
         <th width="127"> Team </th>
         <th width="93"> Mob Count </th>
-    </tr>
+      </tr>
+      
+      {% for (name, location) in game_board.items() %}
+      <tr>
+	    <td width="162">{{ name }}</td>
+	    <td width="127">{{ location.controlling_team|default('Up for grabs!') }}</td>
+	    <td width="93">{{ location.mob_count }}</td>
+	  </tr>
+      {% else %}
+      <tr><td>Huh, no data yet...</td></tr>
+      {% endfor %}
+    </table>
+  </div>
 
-    {% for (name, location) in game_board.items() %}
-    <tr>
-		<td width="162">{{ name }}</td>
-		<td width="127">{{ location.controlling_team|default('Up for grabs!') }}</td>
-		<td width="93">{{ location.mob_count }}</td>
-		</tr>
-    {% else %}
-    <tr><td>Huh, no data yet...</td></tr>
-    {% endfor %}
-</table>
+  <div class="pure-u-1">
+    <h3>Scoreboard</h3>
+  </div>
 
-<br />
-<br />
-
-<h3> Leaderboards </h3>
-
-<div style="position:relative">
-    <div style="float:left; width:200px">
-  		<h4> Team Scores </h4>
-    	<table width="175" >
-        	<tr> 
-            	<th> Team </th>
-            	<th> Score </th>
-        	</tr>
-			
-            {% for (name, score) in team_scores.items() %}
-			<tr>
-				<td> {{ name }} </td>
-				<td> {{ score }} </td>
-			</tr>
-            {% else %}
-            <tr><td>No teams have scored yet!</td></tr>
-            {% endfor %}
-    	</table>
-    </div>
-
-    <div style=" float:left">
-    	<h4> Individual Scores</h4>
-    
-      	<table width="175" style="position:a">
-      		<tr>
-            	<th> Player </th>
-            	<th> Score </th>
-        	</tr>
-			
-
-            {% for player in players %}
-			<tr>
-				<td>{{ player.display_name|default('Anon ' + player.id) }} </td>
-				<td>{{ player.points|default('scoreless') }}</td>
-			</tr>
-            {% else %}
-            <tr><td>Hmm, no player data yet...</td></tr>
-            {% endfor %}
-    	</table>
-    </div>
+  <div class="pure-u-1-2" id="team-scores">
+  	<h4>Team Scores</h4>
+    <table class="pure-table pure-table-horizontal">
+      <tr> 
+        <th> Team </th>
+        <th> Score </th>
+      </tr>
+	  
+      {% for (name, score) in team_scores.items() %}
+	  <tr>
+		<td> {{ name }} </td>
+		<td> {{ score }} </td>
+	  </tr>
+      {% else %}
+      <tr><td>No teams have scored yet!</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="pure-u-1-2" id="player-scores">
+    <h4>Individual Scores</h4>
+    <table class="pure-table pure-table-horizontal">
+      <tr>
+        <th>Player</th>
+        <th>Score</th>
+      </tr>
+      {% for player in players %}
+	  <tr>
+		<td>{{ player.display_name|default('Anon ' + player.id) }} </td>
+		<td>{{ player.points|default('scoreless') }}</td>
+	  </tr>
+      {% else %}
+      <tr><td>Hmm, no player data yet...</td></tr>
+      {% endfor %}
+    </table>
+  </div>
 </div>
-</html>
+
 {% endblock %}

@@ -2,24 +2,28 @@
 <html>
   <head>
     <title>Tappy Terror: {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}" />
   </head>
-  <body>
-    <header>
-      {% block header %}{% endblock %}
+  <body class="pure-skin-green">
+    <header class="pure-g">
+      <div class="pure-u-1">
+        <h1>Tappy Terror</h1>
+        <h2>{% block header %}{% endblock %}</h2>
+      </div>
     </header>
     <article>
       {% block body %}{% endblock %}
     </article>
-    <footer>
-      <div class="about">
-        <p>Tappy Terror is a demonstration of the OpenAMD project created by Jamie Culpon, Megan Myers, and Sam Calabrese. This version of Tappy Terror was coded by Jamie based off the original version designed by all three and coded by Jamie and Sam</p>
+    <footer class="pure-g-r">
+      <div class="footer-block pure-u-1-3" id="about">
+        <p>Tappy Terror was a demonstration of the OpenAMD project for The Next HOPE in 2010. It was created and designed by Jamie Culpon, Megan Myers, and Sam Calabrese. This version of Tappy Terror was coded by Jamie based off the original version.</p>
       </div>
-      <div class="copyright">
-        <p>Tappy Terror is licensed under the MIT license.</p>
+      <div class="footer-block pure-u-1-3" id="copyright">
+        <p>This version of Tappy Terror is &copy; Jamie Culpon and licensed under the MIT license.</p>
       </div>
-      <div class="github">
-        <p>Code available on <a href="https://github.com/jculpon/tappy-flask">GitHub</a>
+      <div class="footer-block pure-u-1-3" id="github">
+        <p>Code available on <a href="https://github.com/jculpon/tappy-flask">GitHub</a>. Comments and pull requests welcome.</p>
       </div>
     </footer>
   </body>
