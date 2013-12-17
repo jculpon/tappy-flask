@@ -19,7 +19,12 @@ This project was based on discussions with the OpenAMD team for [The Next HOPE](
 
 TODOs
 -----
+- Font treatment
+- Check pages on mobile browser
+- Confirm layouts on Chrome and Safari
+- Project Info/landing page
+- Navigation
 - Getting started documentation
-- Style the index pages
 - Determine if OpenAMD data still exists
 - Pump for location data
+- Javascript to highlight locations on mouse/tap on game page
