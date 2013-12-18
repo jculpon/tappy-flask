@@ -16,9 +16,10 @@ import errno
 import random
 import sqlite3
 import datetime
+import json
 
 # Flask setup
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, request, jsonify
 
 app = Flask(__name__)
 
@@ -54,6 +55,26 @@ def game_index():
         players=game_state.active_players        
     )
 
+@app.route('/amd/push', methods=['POST'])
+def location_push():
+    """Recieve a push of location data from the OpenAMD servers"""
+    updates = request.get_json(force=True)
+
+    if not isinstance(updates, list):
+        return jsonify(
+            status='failure',
+            reason='Unexpected format'
+        )
+    
+    game_state = TappyTerrorGame.load_from_snapshot(g.db)
+    game_state.update_player_positions(updates)
+    game_state.snapshot_to_db(g.db)
+
+    return jsonify(
+        status='ok',
+        snapshot_id=12345
+    )
+    
 # End Flask setup
 
 
@@ -172,6 +193,17 @@ class TappyTerrorGame(object):
     def tick(self):
         self._update_game_board()
         self._update_mobs()
+
+    def update_player_positions(self, players):
+        """Update the position of all players
+
+        Updates the position of players. The list of players is assumed to
+        contain all players who are active at this moment.
+
+        Params:
+        - players: A list of players
+        """
+        pass
 
     def _update_game_board(self):
         """Update the game board based on the latest player location dump.

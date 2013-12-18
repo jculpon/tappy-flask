@@ -10,6 +10,7 @@
 
 import tappy
 import unittest
+import json
 
 class TappyTerrorWebTestCase(unittest.TestCase):
     def setUp(self):
@@ -32,6 +33,43 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         # and really that should be mocked out or something to avoid the
         # file write while testing
         tappy.draw_board_image(dummy_game_board, tappy.floor_list)
+
+    def test_location_push(self):
+        no_data = self.app.post('/amd/push')
+        self.assertEqual(no_data.status_code, 400)
+
+        malformed_data = self.app.post(
+            '/amd/push',
+            data='{"a":',
+            content_type='application/json'
+        )
+        self.assertEqual(no_data.status_code, 400)
+
+        wrong_content_type = self.app.post(
+            '/amd/push',
+            data=json.dumps({'a': 'b'})
+        )
+        self.assertEqual(wrong_content_type.status_code, 200)
+        decoded = json.loads(wrong_content_type.data)
+        self.assertEqual(u'failure', decoded['status'])
+
+        wrong_json_format = self.app.post(
+            '/amd/push',
+            data=json.dumps({'a': 'b'}),
+            content_type='application/json'
+        )
+        self.assertEqual(wrong_json_format.status_code, 200)
+        decoded = json.loads(wrong_json_format.data)
+        self.assertEqual(u'failure', decoded['status'])
+
+        well_formed = self.app.post(
+            '/amd/push',
+            data=json.dumps([{'user':'user1', 'x': 1, 'y': 2, 'z': 3}]),
+            content_type='application/json'
+        )
+        self.assertEqual(well_formed.status_code, 200)
+        decoded = json.loads(well_formed.data)
+        self.assertEqual(u'ok', decoded['status'])
 
 class TappyTerrorGameTestCase(unittest.TestCase):
     def test_start_game(self):
