@@ -5,12 +5,24 @@ Tappy Terror is a game/toy/artwork built to take advantage of the [OpenAMD](http
 
 Game Overview
 -------------
+
 Tappy Terror divided The Next HOPE con space in to areas that were slowly filling with ghosts. Teams of attendees could chase off ghosts by tapping a special button on the con's badge. Chasing off ghosts scored points for both the team and the individual attendee. Additionally, if teams kept areas of the con they controlled clear of ghosts for an extended period of time, they could score additional points.
 
 Tappy Terror uses the overall movement of attendees to divvy up different areas of convention space among a set of four color-coded teams. Territories change ownership based on who happens to be in a given part of the convention, regardless of whether or not they are actively participating in the game. Teams could try to coordinate and get more members in certain areas to take them over, but the movement of crowds from one part of the convention to another could cause the territory to shift unexpectedly. Our hope was that the ebb and flow of attendees would become an important part of the gameplay.
 
+Getting Started
+---------------
+
+Grab the source and set up a new virtualenv if you desire, then use the Makefile to kick things off. Install the dependencies with:
+`$ make deps`
+and then you can use
+`$ make devserver`
+to start a development server listening on http://127.0.0.1:5000. You can run the tests with:
+`$ make test`
+
 History
 -------
+
 Tappy Terror is a small game that was thrown together during [The Next HOPE](http://thenexthope.org). It was intended to show off some interesting things that could be done with the real-time tracking of attendees at HOPE. As such, it was primarily intended as a demonstration and gameplay experiment, not a polished or pretty game.
 
 Originally Tappy Terror was built on top of a quite old version of web.py. I've ported it to [Flask](http://flask.pocoo.org/) here in part to move the code to something that is easier to get up and running quickly. The idea is that this project could show someone how to get a simple but dynamic webapp up quickly.
@@ -26,7 +38,6 @@ Potential Improvements
 ----------------------
 
 Documentation:
-- Getting started guide
 - Set up and convert docstrings to [sphinx](Sphinx)
 
 Porting:
