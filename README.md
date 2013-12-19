@@ -27,6 +27,8 @@ to start a development server listening on http://127.0.0.1:5000. You can run th
 
 ```make test```
 
+If you get an ImportError straight off, make sure you've run `make deps`.
+
 
 Tech Overview
 -------------
