@@ -7,10 +7,12 @@
 
     :license: MIT; details in LICENSE
 """
+from __future__ import unicode_literals
 
 import tappy
 import unittest
 import json
+import random
 
 class TappyTerrorWebTestCase(unittest.TestCase):
     def setUp(self):
@@ -72,9 +74,98 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         self.assertEqual(u'ok', decoded['status'])
 
 class TappyTerrorGameTestCase(unittest.TestCase):
+    def get_location_dump(filter=None, value=None):
+        """Dummy list of user updates
+        """
+        return [
+            {"user": "user10",
+             "team": "blue",
+             "area": "NOC"},
+            {"user": "user11",
+             "team": "red",
+             "area": "Core Staff Area"},
+            {"user": "user12",
+             "team": "green",
+             "area": random.choice(tappy.floor_list.keys())},
+            {"user": "user13",
+             "team": "green",
+             "area": random.choice(tappy.floor_list.keys())},
+            {"user": "user14",
+             "team": "yellow",
+             "area": random.choice(tappy.floor_list.keys())},
+            {"user": "user15",
+             "team": "yellow",
+             "area": random.choice(tappy.floor_list.keys()),
+             "button": True}
+        ]
+
     def test_start_game(self):
         game = tappy.TappyTerrorGame()
         game.tick()
+
+    def test_position_update_changes_active(self):
+        game = tappy.TappyTerrorGame()
+        # Equivelent to asserting that there are no active players
+        self.assertFalse(game.active_players)
+
+        user_updates = self.get_location_dump()
+        no_button_updates = [x for x in user_updates if not x.get('button')]
+        button_updates = [x for x in user_updates if x.get('button')]
+        inactive_users = [x['user'] for x in no_button_updates]
+        expected_active_users = [x['user'] for x in button_updates]
+        # update without buttons shouldn't make users appear
+        game.update_player_positions(no_button_updates)
+        self.assertFalse(game.active_players)
+
+        # now update all of them
+        game.update_player_positions(user_updates)
+        self.members_correct(game.active_players, expected_active_users, inactive_users)
+
+        # performing another update without any button folks shouldn't
+        # make the button folks leave active
+        game.update_player_positions(no_button_updates)
+        self.members_correct(game.active_players, expected_active_users, inactive_users)
+
+        # updating just the button folks shouldn't change anything
+        game.update_player_positions(button_updates)
+        self.members_correct(game.active_players, expected_active_users, inactive_users)
+
+        # make a few random users toggle their button, make sure update works
+        random_users = random.sample(user_updates, 3)
+        for user in random_users:
+            if user.get('button'):
+                user['button'] = False
+            else:
+                user['button'] = True
+                inactive_users.remove(user['user'])
+                expected_active_users.append(user['user'])
+
+        game.update_player_positions(user_updates)
+        self.members_correct(game.active_players, expected_active_users, inactive_users)
+
+        # confirm that our assumptions survive a round trip
+        mem_db = tappy.connect_memory_db()
+        tappy.create_game_db(mem_db)
+        game.snapshot_to_db(mem_db)
+        roundtrip = tappy.TappyTerrorGame.load_from_snapshot(mem_db)
+        self.assertEquals(game.active_players, roundtrip.active_players)
+
+    def members_correct(self, target, present, absent):
+        """Asserts that target contains elements of present but not absent.
+
+        Asserts that all elements of present are in the target list and none
+        of the elements of absent are in the target list. 
+        
+        Params:
+        - target: the target list
+        - present: sequence of items that must be in target
+        - absent: sequence of items that must not be in target
+        """
+        # NOTE: This is a quick implementation of this, not a performant one
+        for p in present:
+            self.assertIn(p, target)
+        for a in absent:
+            self.assertNotIn(a, target)
 
     def test_snapshot(self):
         mem_db = tappy.connect_memory_db()

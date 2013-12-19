@@ -7,6 +7,7 @@
 
     :license: MIT; details in LICENSE
 """
+from __future__ import unicode_literals
 
 from PIL import Image, ImageDraw
 from contextlib import closing
@@ -17,6 +18,7 @@ import random
 import sqlite3
 import datetime
 import json
+import re
 
 # Flask setup
 from flask import Flask, render_template, g, request, jsonify
@@ -65,14 +67,17 @@ def location_push():
             status='failure',
             reason='Unexpected format'
         )
-    
+
     game_state = TappyTerrorGame.load_from_snapshot(g.db)
     game_state.update_player_positions(updates)
-    game_state.snapshot_to_db(g.db)
+    game_state.tick()
+    snapshot_id = game_state.snapshot_to_db(g.db)
+
+    draw_board_image(game_state.game_board, floor_list) 
 
     return jsonify(
         status='ok',
-        snapshot_id=12345
+        snapshot_id=snapshot_id
     )
     
 # End Flask setup
@@ -174,6 +179,8 @@ initial_mob_count = 1
 #points_per_control_tick - points for holding a territory per minute
 points_per_control_tick = 30.0
 
+# points_per_kill - points for killing a mob
+points_per_kill = 5.0
 
 # Game logic
 class TappyTerrorGame(object):
@@ -191,21 +198,87 @@ class TappyTerrorGame(object):
             self.game_board[name] = Location(name, floor_list[name])
 
     def tick(self):
-        self._update_game_board()
         self._update_mobs()
+        for name, loc in self.game_board.items():
+            if not loc.has_mobs():
+                self.team_points[loc.team] += loc.score()
 
-    def update_player_positions(self, players):
+    def update_player_positions(self, openamd_players):
         """Update the position of all players
 
         Updates the position of players. The list of players is assumed to
         contain all players who are active at this moment.
 
         Params:
-        - players: A list of players
+        - openamd_players: A list of open amd user dictionaries 
         """
-        pass
+        # TODO make sure area is properly populated and lines up with the
+        # x,y values provided
+        for p in openamd_players:
+            # both of the following cleanups could use setdefault, but I
+            # don't want to re if we already know
+            # the team from the amd side
+            # if openamd didn't give us an area, try to guess from x,y location
+            area = p.get('area')
+            if area is None:
+                # FIXME determine area from x y
+                p['area'] = random.choice(floor_list.keys())
 
-    def _update_game_board(self):
+            team = p.get('team')
+            if team is None:
+                # Initial team assignment based on amd id
+                numeric_user = int(re.search(r'\d+', p['user']).group())
+                team_index = numeric_user % len(self.team_points.keys())
+                p['team'] = self.team_points.keys()[team_index]
+            #update_player_area(p)
+
+        # We do the update in two passes over the player list. The first pass
+        # over the player list updates the counts of people in each location,
+        # which may change the ownership of the location and therefore affect
+        # what action any button presses might have. After the first pass,
+        # we've finished constructing the current state of the board and could
+        # theoretically draw the game board.
+        self._update_game_board(openamd_players)
+        
+        # In the second pass, we only worry about players who have pressed
+        # the button on their badge. The meaning of that action depends on the
+        # board context: if the person who presses the button belongs to the
+        # the team that owns the location they're in, it gives them points,
+        # otherwise it spawns another mob.
+        self._update_active_players(openamd_players)
+
+
+    def _update_active_players(self, players):
+        # Count of the players per team in each location
+        teams_in_location = {}
+        for p in players:
+            if not p.get('button'):
+                continue
+
+            loc = self.game_board.get(p['area'])
+            if loc is None:
+                # ignore the player if we can't locate them
+                # Worth it to log this and check with amd folks?
+                continue
+
+            if p['user'] not in self.active_players:
+                self.active_players[p['user']] = Player(
+                    p['user'],
+                    None,
+                    p['team'],
+                    0
+                )
+
+            if loc.team == p['team']:
+                loc.remove_mob()
+                self.active_players[p['user']].score += points_per_kill
+                # TODO should we give teams points for clearing a territory
+                # separate from the points for controlling a mobless location
+                # in tick?
+            else:
+                loc.spawn_mob()
+
+    def _update_game_board(self, players):
         """Update the game board based on the latest player location dump.
 
         Stuff not done right:
@@ -224,15 +297,12 @@ class TappyTerrorGame(object):
         # probably a more elegant way to do this but it gets the job done
         for area_name, loc in self.game_board.items():
             team_counts[area_name] = dict([(t,0) for t in self.team_points])
-
-        #Get the location dump of where all the players are
-        players = get_location_dump()
     
         # tally up the number of players on each team in each location
         for p in players:
-            for n, l in self.game_board.items():
-                if p["area"] == n:
-                    team_counts[n][p["team"]] += 1
+            loc = self.game_board.get(p["area"])
+            if loc is not None:
+                team_counts[loc.name][p["team"]] += 1
 
         # update locations's teams with the new owners
         for name, team_count in team_counts.items():
@@ -245,14 +315,12 @@ class TappyTerrorGame(object):
             if team_count[top_team] != 0:
                 self.game_board[name].team = top_team
 
-        #Draw the image of the current gameboard
-        draw_board_image(self.game_board, floor_list) 
-
     def _update_mobs(self):
         """increase mob count in any location that already has a mob
         """
         for name, loc in self.game_board.items():
             assert loc.mob_count >= 0, "weirdness: negative mob count"
+            # Should we spawn mobs in held areas every nth update?
             if loc.has_mobs:
                 loc.spawn_mob()
 
@@ -303,11 +371,13 @@ class TappyTerrorGame(object):
             #_snapshot_active_players(db)
             db.executemany(
                 'INSERT OR REPLACE INTO '
-                'players(id, amd_user_id, display_name) '
-                'VALUES (?, ?, ?)',
-                ((x['id'], x['amd_user_id'], x['display_name'])
-                 for x in self.active_players)
+                'players(amd_user_id, display_name, team_id, score) '
+                'VALUES (?, ?, (SELECT id FROM teams WHERE name=?), ?)',
+                ((k, v.display_name, v.team, v.score)
+                 for k, v in self.active_players.items())
             )
+
+            return update_id
 
     @staticmethod
     def load_from_snapshot(db):
@@ -393,27 +463,65 @@ class TappyTerrorGame(object):
 
             #_snapshot_active_players(db)
             players_result = db.execute(
-                'SELECT id, amd_user_id, display_name FROM players'
+                'SELECT p.amd_user_id, p.display_name, t.name, p.score '
+                'FROM players AS p INNER JOIN teams AS t ON t.id = p.team_id'
             )
             for player_row in players_result.fetchall():
-                (id, amd_user_id, display_name) = player_row
-                player = {
-                    'id': id,
-                    'amd_user_id': amd_user_id,
-                    'display_name': display_name
-                }
-                game.active_players.append(player)
+                (amd_user_id, display_name, team, score) = player_row
+                game.active_players[amd_user_id] = Player(
+                    amd_user_id,
+                    display_name,
+                    team,
+                    score
+                )
             
             return game
 
-def get_location_dump(filter=None, value=None):
-    """Dummy implementation of get_location_dump for testing
+class Player(object):
+    """Player representation for Tappy Terror
+
+    Internal representation of players in Tappy Terror. Note that this is
+    distinct from the on-the-wire representation that the openamd api uses
+    to represent distinct users. It's intended only to keep track of the
+    minimal set of information that Tappy Terror needs to know about each
+    player -- namely that they're on a team and have a score
+
+    This actually could be a types.SimpleNamespace() if I wanted to restrict
+    this to just python>=3.3
     """
-    return [{"user": "10", "team": "blue", "area": "NOC"},
-            {"user": "11", "team": "red", "area": "Core Staff Area"},
-            {"user": "12", "team": "green", "area": random.choice(floor_list.keys())},
-            {"user": "13", "team": "green", "area": random.choice(floor_list.keys())},
-            {"user": "14", "team": "yellow", "area": random.choice(floor_list.keys())}]
+    def __init__(self, amd_user_id, display_name, team, score):
+        self.amd_user_id = amd_user_id
+        self.display_name = display_name
+        self.team = team
+        self.score = score
+
+    def __repr__(self):
+        return 'Person(%s, %s, %s, %d)' % (
+            self.amd_user_id,
+            self.display_name,
+            self.team,
+            self.score
+        )
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if not isinstance(other, Player):
+            return False
+
+        return ((self.amd_user_id == other.amd_user_id)
+                and (self.display_name == other.display_name)
+                and (self.team == other.team)
+                and (self.score == other.score))
+
+
+    def __neq__(self, other):
+        return not (self == other)
+
+    def __hash__(self):
+        seed = 0x34567 # arbitrary
+        return (seed ^ hash(self.amd_user_id) ^ hash(self.display_name)
+                ^ hash(self.team) ^ hash(self.score))
 
 class Location(object):
     """Handles all information for locations in Tappy Terror
@@ -459,7 +567,7 @@ class Location(object):
         return not (self == other)
 
     def __hash__(self):
-        seed = 0x34567
+        seed = 0x34567 # arbitrary
         return (seed ^ hash(self.name) ^ hash(self.team)
                 ^ hash(self.bounds.poly_type) ^ hash(self.bounds.vertices)
                 ^ hash(self.mob_count))

@@ -88,7 +88,10 @@ DROP TABLE IF EXISTS players;
 CREATE TABLE players (
        id INTEGER PRIMARY KEY AUTOINCREMENT,
        amd_user_id INTEGER UNIQUE NOT NULL,
-       display_name TEXT
+       display_name TEXT,
+       team_id INTEGER,
+       score INTEGER,
+       FOREIGN KEY(team_id) REFERENCES teams(id)
 );
 DROP INDEX IF EXISTS player_amd_idx;
 CREATE UNIQUE INDEX player_amd_idx ON players(amd_user_id);
