@@ -29,7 +29,7 @@
       {% for (name, location) in game_board.items() %}
       <tr>
 	    <td width="162">{{ name }}</td>
-	    <td width="127">{{ location.controlling_team|default('Up for grabs!') }}</td>
+	    <td width="127">{{ location.team|default('Up for grabs!') }}</td>
 	    <td width="93">{{ location.mob_count }}</td>
 	  </tr>
       {% else %}
