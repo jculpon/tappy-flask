@@ -16,11 +16,12 @@ Getting Started
 You need a recent version of Python 2.7 to run this (I use 2.7.6). It may run on Python 3.3, but it is untested. You should have [pip installed](http://www.pip-installer.org/en/latest/installing.html) to make it easier to grab the dependencies.
 
 Grab the source and set up a new virtualenv if you desire, then use the Makefile to kick things off. Install the dependencies with:
-`$ make deps`
-and then you can use
-`$ make devserver`
+```make deps```
+and use
+```make devserver```
 to start a development server listening on http://127.0.0.1:5000. You can run the tests with:
-`$ make test`
+```make test```
+
 
 Tech Overview
 -------------
