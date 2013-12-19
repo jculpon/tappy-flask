@@ -47,22 +47,12 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         )
         self.assertEqual(no_data.status_code, 400)
 
-        wrong_content_type = self.app.post(
-            '/amd/push',
-            data=json.dumps({'a': 'b'})
-        )
-        self.assertEqual(wrong_content_type.status_code, 200)
-        decoded = json.loads(wrong_content_type.data)
-        self.assertEqual(u'failure', decoded['status'])
-
         wrong_json_format = self.app.post(
             '/amd/push',
             data=json.dumps({'a': 'b'}),
             content_type='application/json'
         )
-        self.assertEqual(wrong_json_format.status_code, 200)
-        decoded = json.loads(wrong_json_format.data)
-        self.assertEqual(u'failure', decoded['status'])
+        self.assertEqual(wrong_json_format.status_code, 422)
 
         well_formed = self.app.post(
             '/amd/push',
@@ -71,6 +61,14 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         )
         self.assertEqual(well_formed.status_code, 200)
         decoded = json.loads(well_formed.data)
+        self.assertEqual(u'ok', decoded['status'])
+        
+        wrong_content_type = self.app.post(
+            '/amd/push',
+            data=json.dumps([{'user':'user1', 'x': 1, 'y': 2, 'z': 3}])
+        )
+        self.assertEqual(wrong_content_type.status_code, 200)
+        decoded = json.loads(wrong_content_type.data)
         self.assertEqual(u'ok', decoded['status'])
 
 class TappyTerrorGameTestCase(unittest.TestCase):

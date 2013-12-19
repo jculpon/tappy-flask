@@ -21,7 +21,7 @@ import json
 import re
 
 # Flask setup
-from flask import Flask, render_template, g, request, jsonify
+from flask import Flask, render_template, g, request, jsonify, abort
 
 app = Flask(__name__)
 
@@ -63,10 +63,7 @@ def location_push():
     updates = request.get_json(force=True)
 
     if not isinstance(updates, list):
-        return jsonify(
-            status='failure',
-            reason='Unexpected format'
-        )
+        abort(422)
 
     game_state = TappyTerrorGame.load_from_snapshot(g.db)
     game_state.update_player_positions(updates)
