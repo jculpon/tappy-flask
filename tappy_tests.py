@@ -61,7 +61,7 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         )
         self.assertEqual(well_formed.status_code, 200)
         decoded = json.loads(well_formed.data)
-        self.assertEqual(u'ok', decoded['status'])
+        self.assertIsInstance(decoded['snapshot_id'], int)
         
         wrong_content_type = self.app.post(
             '/amd/push',
@@ -69,7 +69,7 @@ class TappyTerrorWebTestCase(unittest.TestCase):
         )
         self.assertEqual(wrong_content_type.status_code, 200)
         decoded = json.loads(wrong_content_type.data)
-        self.assertEqual(u'ok', decoded['status'])
+        self.assertIsInstance(decoded['snapshot_id'], int)
 
 class TappyTerrorGameTestCase(unittest.TestCase):
     def get_location_dump(filter=None, value=None):

@@ -73,7 +73,6 @@ def location_push():
     draw_board_image(game_state.game_board, floor_list) 
 
     return jsonify(
-        status='ok',
         snapshot_id=snapshot_id
     )
     
