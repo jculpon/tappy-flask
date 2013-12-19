@@ -105,8 +105,8 @@ class TappyTerrorGameTestCase(unittest.TestCase):
              "button": True},
             {"user": "user32",
              "team": "yellow",
-             "area": "NOC"},
-
+             "area": "NOC",
+             "button": True},
         ]
 
     def test_start_game(self):
@@ -223,7 +223,26 @@ class TappyTerrorGameTestCase(unittest.TestCase):
                 expected_teams[user['area']]
             )
 
+    def test_assign_teams(self):
+        game = tappy.TappyTerrorGame()
+        user_updates = self.get_location_dump()
+        for user in user_updates:
+            user['team'] = None
+            game._assign_team(user)
+        
+        assigned_teams = {user['user']: user['team'] for user in user_updates}
+        for user in user_updates:
+            user['team'] = None
+        game.update_player_positions(user_updates)
 
+        for (user_id, player) in game.active_players.items():
+            self.assertEqual(player.team, assigned_teams[player.amd_user_id])
+
+        mem_db = tappy.connect_memory_db()
+        tappy.create_game_db(mem_db)
+        game.snapshot_to_db(mem_db)
+        roundtrip = tappy.TappyTerrorGame.load_from_snapshot(mem_db)
+        self.assertEqual(game.active_players, roundtrip.active_players)
 
 class LocationTestCase(unittest.TestCase):
     def test_mob_spawn(self):

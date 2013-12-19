@@ -221,14 +221,7 @@ class TappyTerrorGame(object):
                 # FIXME determine area from x y
                 p['area'] = random.choice(floor_list.keys())
 
-            team = p.get('team')
-            if team is None:
-                # Assign teams based on amd id -- would probably be better
-                # to bucket users based on team sizes, but this is what we
-                # did at HOPE so I'm keeping it for now.
-                numeric_user = int(re.search(r'\d+', p['user']).group())
-                team_index = numeric_user % len(self.team_points.keys())
-                p['team'] = self.team_points.keys()[team_index]
+            self._assign_team(p)
 
         # We do the update in two passes over the player list. The first pass
         # over the player list updates the counts of people in each location,
@@ -245,7 +238,16 @@ class TappyTerrorGame(object):
         # otherwise it spawns another mob.
         self._update_active_players(openamd_players)
 
-
+    def _assign_team(self, p):
+        team = p.get('team')
+        if team is None:
+            # Assign teams based on amd id -- would probably be better
+            # to bucket users based on team sizes, but this is what we
+            # did at HOPE so I'm keeping it for now.
+            numeric_user = int(re.search(r'\d+', p['user']).group())
+            team_index = numeric_user % len(self.team_points.keys())
+            p['team'] = self.team_points.keys()[team_index]
+        
     def _update_active_players(self, players):
         # Count of the players per team in each location
         teams_in_location = {}
@@ -494,7 +496,7 @@ class Player(object):
         self.score = score
 
     def __repr__(self):
-        return 'Person(%s, %s, %s, %d)' % (
+        return 'Player(\'%s\', \'%s\', \'%s\', %d)' % (
             self.amd_user_id,
             self.display_name,
             self.team,
