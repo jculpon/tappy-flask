@@ -81,6 +81,12 @@ class TappyTerrorGameTestCase(unittest.TestCase):
             {"user": "user10",
              "team": "blue",
              "area": "NOC"},
+            {"user": "user30",
+             "team": "red",
+             "area": "NOC"},
+            {"user": "user31",
+             "team": "green",
+             "area": "NOC"},
             {"user": "user11",
              "team": "red",
              "area": "Core Staff Area"},
@@ -96,7 +102,11 @@ class TappyTerrorGameTestCase(unittest.TestCase):
             {"user": "user15",
              "team": "yellow",
              "area": random.choice(tappy.floor_list.keys()),
-             "button": True}
+             "button": True},
+            {"user": "user32",
+             "team": "yellow",
+             "area": "NOC"},
+
         ]
 
     def test_start_game(self):
@@ -189,6 +199,30 @@ class TappyTerrorGameTestCase(unittest.TestCase):
         self.assertDictEqual(full_game.game_board, roundtrip.game_board)
         self.assertDictEqual(full_game.active_players, roundtrip.active_players)
         self.assertDictEqual(full_game.team_points, roundtrip.team_points)
+
+    def test_team_control(self):
+        game = tappy.TappyTerrorGame()
+
+        user_updates = self.get_location_dump()
+        self.assertIsNone(game.game_board[user_updates[0]['area']].team)
+
+        # we expect the first player in the update at each location to 
+        # take control of that location, so make a map of area -> conroller
+        expected_teams = {}
+        for user in user_updates:
+            if user['area'] not in expected_teams:
+                expected_teams[user['area']] = set([user['team']])
+            else:
+                expected_teams[user['area']].add(user['team'])
+
+        game.update_player_positions(user_updates)
+        for user in user_updates:
+            self.assertIsNotNone(game.game_board[user['area']].team)
+            self.assertIn(
+                game.game_board[user['area']].team,
+                expected_teams[user['area']]
+            )
+
 
 
 class LocationTestCase(unittest.TestCase):
