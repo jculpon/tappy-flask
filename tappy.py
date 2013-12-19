@@ -212,13 +212,10 @@ class TappyTerrorGame(object):
         Params:
         - openamd_players: A list of open amd user dictionaries 
         """
-        # TODO make sure area is properly populated and lines up with the
-        # x,y values provided
+        # Ensure that the OpenAMD data includes area and team
         for p in openamd_players:
             # both of the following cleanups could use setdefault, but I
-            # don't want to re if we already know
-            # the team from the amd side
-            # if openamd didn't give us an area, try to guess from x,y location
+            # found the code a bit uglier with that approach
             area = p.get('area')
             if area is None:
                 # FIXME determine area from x y
@@ -226,11 +223,12 @@ class TappyTerrorGame(object):
 
             team = p.get('team')
             if team is None:
-                # Initial team assignment based on amd id
+                # Assign teams based on amd id -- would probably be better
+                # to bucket users based on team sizes, but this is what we
+                # did at HOPE so I'm keeping it for now.
                 numeric_user = int(re.search(r'\d+', p['user']).group())
                 team_index = numeric_user % len(self.team_points.keys())
                 p['team'] = self.team_points.keys()[team_index]
-            #update_player_area(p)
 
         # We do the update in two passes over the player list. The first pass
         # over the player list updates the counts of people in each location,
