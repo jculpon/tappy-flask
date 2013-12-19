@@ -13,12 +13,21 @@ Tappy Terror uses the overall movement of attendees to divvy up different areas 
 Getting Started
 ---------------
 
+You need a recent version of Python 2.7 to run this (I use 2.7.6). It may run on Python 3.3, but it is untested. You should have [pip installed](http://www.pip-installer.org/en/latest/installing.html) to make it easier to grab the dependencies.
+
 Grab the source and set up a new virtualenv if you desire, then use the Makefile to kick things off. Install the dependencies with:
 `$ make deps`
 and then you can use
 `$ make devserver`
 to start a development server listening on http://127.0.0.1:5000. You can run the tests with:
 `$ make test`
+
+Tech Overview
+-------------
+
+This game runs on the web using Flask. The Flask application and game logic can all be found in tappy.py. The unit tests are in tappy_tests.py. Once the server is started, you can see an overview of the current state of the game at / or /game.html. Updates to location data should be posted as JSON to /amd/push.
+
+Game state gets snapshotted to a sqlite3 database named tappy.db after location updates; the status page reads the latest snapshot to create its overview. The schema for the database is in schema.sql, with initial team and floorplan data for the version of the game run at HOPE in hope.sql.
 
 History
 -------
