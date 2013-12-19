@@ -94,10 +94,10 @@ def draw_board_image(game_board, rooms):
     draw = ImageDraw.Draw(im) #create a draw object
 
     for name, loc in game_board.items() :
-        if rooms[name].poly_type == 'rect':
-            draw.rectangle(rooms[name].vertices, fill=loc.team, outline="black")
-        elif rooms[name].poly_type == 'poly':
-            draw.polygon(rooms[name].vertices, fill=loc.team, outline="black")
+        if loc.bounds.poly_type == 'rect':
+            draw.rectangle(loc.bounds.vertices, fill=loc.team, outline="black")
+        elif loc.bounds.poly_type == 'poly':
+            draw.polygon(loc.bounds.vertices, fill=loc.team, outline="black")
 
     img_dir = os.path.join(app.static_folder, 'boards')
 

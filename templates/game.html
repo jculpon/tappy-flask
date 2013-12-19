@@ -67,10 +67,10 @@
         <th>Player</th>
         <th>Score</th>
       </tr>
-      {% for player in players %}
+      {% for (player_id, player) in players.items() %}
 	  <tr>
-		<td>{{ player.display_name|default('Anon ' + player.id) }} </td>
-		<td>{{ player.points|default('scoreless') }}</td>
+		<td>{{ ('Anon ' + player_id) if player.display_name is none else player.display_name }} </td>
+		<td>{{ player.score|default(0) }}</td>
 	  </tr>
       {% else %}
       <tr><td>Hmm, no player data yet...</td></tr>
