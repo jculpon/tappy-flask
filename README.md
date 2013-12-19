@@ -29,6 +29,9 @@ This game runs on the web using Flask. The Flask application and game logic can 
 
 Game state gets snapshotted to a sqlite3 database named tappy.db after location updates; the status page reads the latest snapshot to create its overview. The schema for the database is in schema.sql, with initial team and floorplan data for the version of the game run at HOPE in hope.sql.
 
+A small command-line tool for simulating location updates is in tools/sim.py.
+python sim.py -h should give you up to date information on how to invoke it.
+
 History
 -------
 
@@ -57,8 +60,14 @@ Flask app:
 - More robust error handling
 - API endpoints to allow clients to post individual player updates
 - Python 3 compat check
+- Find a nicer way to test the templates for errors than hitting them
+  with a browser
+- Create a db snapshot of an in progress game that would be useful to
+  load into the in-memory db during tests to make the template render
+  tests more releastic
 
 Front end/website:
+- Less generic styling
 - Font treatment
 - Confirm layouts on Chrome and Safari
 - Check pages on mobile browser
@@ -67,5 +76,5 @@ Front end/website:
 - Javascript to highlight locations on mouse/tap on game page
 
 Other tools:
-- Pump for location data
-- Simulator (requests-based?)
+- Enhance sim.py with an actual crowd simulation
+- Enhance sim.py to read a file containing a bunch of updates to send
